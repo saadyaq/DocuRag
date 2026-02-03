@@ -42,3 +42,26 @@ class CodeLoader:
         logger.info(f"Loaded {len(elements)} elements from {self.file_path.name}")
         return elements
 
+
+    def _extract_module_docstring(self, root_node, source_code: str) -> dict | None:
+
+        for node in root_node.children:
+            if node.type== "expression_statement":
+                for child in node.children:
+
+                    if child.type=="string":
+                        content=source_code[child.start_byte:child.end_byte]
+                        return {
+                            "content": content,
+                            "element_type": "module_docstring",
+                            "name" : None,
+                            "start_line": child.start_point[0] +1,
+                            "end_line": child.end_point[0] +1,
+                            "docstring": content.strip('\"\''),
+                            "source": str(self.file_path.resolve()),
+                        }
+            elif node.type not in type("comment",):
+                break
+        return None
+
+
