@@ -1,7 +1,5 @@
 import logging
 from pathlib import Path
-from typing import Dict
-
 import tree_sitter_python as ts_python
 from tree_sitter import Language, Parser
 
@@ -23,21 +21,21 @@ class CodeLoader:
         elements = []
 
         #Extract module docstring
-        module_docstring = self._extract_module_docstring(tree.root_node, source_code)
+        module_docstring = self._extract_module_docstring(tree.root_node, source)
         if module_docstring:
             elements.append(module_docstring)
 
         #Extract Imports
-        imports = self._extract_imports(tree.root_node,source_code)
+        imports = self._extract_imports(tree.root_node, source)
         if imports:
             elements.append(imports)
 
         #Extract functions and classes
         for node in tree.root_node.children:
             if node.type== "function_definition":
-                elements.append(self._extract_function(node, source_code))
+                elements.append(self._extract_function(node, source))
             elif node.type== "class_definition":
-                elements.append(self._extract_class(node,source_code))
+                elements.append(self._extract_class(node, source))
 
         logger.info(f"Loaded {len(elements)} elements from {self.file_path.name}")
         return elements
@@ -60,7 +58,7 @@ class CodeLoader:
                             "docstring": content.strip('\"\''),
                             "source": str(self.file_path.resolve()),
                         }
-            elif node.type not in type("comment",):
+            elif node.type not in ("comment",):
                 break
         return None
 
@@ -99,7 +97,7 @@ class CodeLoader:
             if child.type== "identifier":
                 name = source_code[child.start_byte:child.end_byte]
             elif child.type=="block":
-                name = self._extract_docstring(child, source_code)
+                docstring = self._extract_docstring(child, source_code)
 
         return {
             "content": source_code[node.start_byte:node.end_byte],
@@ -131,16 +129,16 @@ class CodeLoader:
                         if method_name:
                             methods.append(method_name)
 
-            return {
-                "content": source_code[node.start_byte:node.end_byte],
-                "element_type": "class",
-                "name": name,
-                "start_line": node.start_point[0] + 1,
-                "end_line": node.end_point[0] + 1,
-                "docstring": docstring,
-                "methods": methods,
-                "source": str(self.file_path.resolve()),
-            }
+        return {
+            "content": source_code[node.start_byte:node.end_byte],
+            "element_type": "class",
+            "name": name,
+            "start_line": node.start_point[0] + 1,
+            "end_line": node.end_point[0] + 1,
+            "docstring": docstring,
+            "methods": methods,
+            "source": str(self.file_path.resolve()),
+        }
 
     def _extract_docstring(self, block_node, source_code: str) -> str | None:
         for child in block_node.children:
