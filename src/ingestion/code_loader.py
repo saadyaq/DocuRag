@@ -142,3 +142,13 @@ class CodeLoader:
                 "source": str(self.file_path.resolve()),
             }
 
+    def _extract_docstring(self, block_node, source_code: str) -> str | None:
+        for child in block_node.children:
+            if child.type == "expression_statement":
+                for expr_child in child.children:
+                    if expr_child.type == "string":
+                        content = source_code[expr_child.start_byte:expr_child.end_byte]
+                        return content.strip('\"\'').strip()
+            elif child.type not in ("comment",):
+                break
+        return None
