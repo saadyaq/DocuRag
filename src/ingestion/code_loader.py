@@ -64,4 +64,30 @@ class CodeLoader:
                 break
         return None
 
+    def _extract_imports(self, root_node, source_code: str) -> dict|None :
+        import_lines = []
+        start_line = None
+        end_line = None
+
+        for node in root_node.children:
+            if node.type in ("import_statement", "import_from_statement"):
+                if start_line is None:
+                    start_line = node.start_point[0] +1
+                end_line = node.end_point[0] +1
+                import_lines.append(source_code[node.start_byte:node.end_byte])
+
+        if import_lines:
+            return {
+
+                "content": "\n".join(import_lines),
+                "element_type": "imports",
+                "name": None,
+                "start_line": start_line,
+                "end_line": end_line,
+                "docstring": None,
+                "source": str(self.file_path.resolve()),
+
+            }
+
+        return None
 
