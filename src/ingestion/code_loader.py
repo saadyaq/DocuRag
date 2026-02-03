@@ -111,3 +111,34 @@ class CodeLoader:
             "source": str(self.file_path.resolve()),
         }
 
+
+    def _extract_class(self, node, source_code: str) -> dict :
+        name = None
+        docstring = None
+        methods = []
+        for child in node.children:
+            if child.type == "identifier":
+                name = source_code[child.start_byte:child.end_byte]
+            elif child.type == "block":
+                docstring = self._extract_docstring(child, source_code)
+                for block_child in child.children:
+                    if block_child.type == "function_definition":
+                        method_name = None
+                        for mc in block_child.children:
+                            if mc.type == "identifier":
+                                method_name = source_code[mc.start_byte:mc.end_byte]
+                                break
+                        if method_name:
+                            methods.append(method_name)
+
+            return {
+                "content": source_code[node.start_byte:node.end_byte],
+                "element_type": "class",
+                "name": name,
+                "start_line": node.start_point[0] + 1,
+                "end_line": node.end_point[0] + 1,
+                "docstring": docstring,
+                "methods": methods,
+                "source": str(self.file_path.resolve()),
+            }
+
