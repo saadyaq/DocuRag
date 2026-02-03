@@ -91,3 +91,23 @@ class CodeLoader:
 
         return None
 
+    def _extract_function(self, node, source_code: str) -> dict|None :
+        name = None
+        docstring = None
+
+        for child in node.children:
+            if child.type== "identifier":
+                name = source_code[child.start_byte:child.end_byte]
+            elif child.type=="block":
+                name = self._extract_docstring(child, source_code)
+
+        return {
+            "content": source_code[node.start_byte:node.end_byte],
+            "element_type": "function",
+            "name": name,
+            "start_line": node.start_point[0] + 1,
+            "end_line": node.end_point[0] + 1,
+            "docstring": docstring,
+            "source": str(self.file_path.resolve()),
+        }
+
