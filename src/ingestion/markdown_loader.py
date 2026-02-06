@@ -19,8 +19,9 @@ class MarkdownLoader:
 
         with open(self.file_path, "r", encoding="utf-8") as file:
             file_content = file.read()
-        result = []
         in_code_block = False
+        #Pour les docs sans header
+        result = [{"title": "", "level": 0, "content": "", "source": str(self.file_path.resolve())}]
         for l in file_content.split("\n"):
             if l.strip().startswith("```"):
                 in_code_block = not in_code_block
@@ -37,6 +38,8 @@ class MarkdownLoader:
 
             elif len(result) > 0 and l.strip() :
                 result[-1]["content"] += l.strip() + "\n"
+
+
         return result
 
 
